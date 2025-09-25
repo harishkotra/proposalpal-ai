@@ -1,0 +1,171 @@
+.leaderboard-container .hero-section {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+  
+.leaderboard-container .hero-section h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+  
+.leaderboard-container .hero-section p {
+    font-size: 1.1rem;
+    color: var(--gray-color);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.leaderboard-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.refresh-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.5rem 1rem;
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+    background-color: var(--light-gray-color);
+}
+
+.refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.leaderboard-list {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.leaderboard-header, .leaderboard-row, .leaderboard-empty-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px 120px;
+    align-items: center;
+    padding: 1rem 1.5rem;
+}
+
+.leaderboard-header {
+    font-weight: 600;
+    color: var(--gray-color);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: #f8f9fa; /* Light grey background for header */
+}
+
+.leaderboard-row {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.leaderboard-row:last-child {
+    border-bottom: none;
+}
+
+.leaderboard-empty-row {
+    grid-template-columns: 1fr; /* Make it span the full width */
+    text-align: center;
+    color: var(--gray-color);
+    padding: 2rem;
+}
+
+
+.rank-col {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.voter-address {
+    font-family: monospace;
+    font-size: 0.95rem;
+}
+
+.you-tag {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-family: var(--font-family);
+    vertical-align: middle;
+    font-weight: 500;
+}
+
+.leaderboard-row.user-row {
+    background-color: #fffbe6; /* A very light yellow highlight */
+}
+
+/* Disclaimer */
+.disclaimer-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--gray-color);
+    margin: 1.5rem auto;
+    max-width: 600px;
+}
+
+/* How It Works Section */
+.how-it-works-card {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin-top: 1rem;
+}
+
+.how-it-works-card h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.how-it-works-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.how-it-works-emoji {
+    font-size: 1.5rem;
+    margin-top: -2px;
+}
+
+.how-it-works-item p {
+    margin: 0;
+    color: #495057;
+}
+
+.how-it-works-description {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    line-height: 1.7;
+    color: var(--gray-color);
+}
+
+@media (max-width: 768px) {
+    .leaderboard-header, .leaderboard-row, .leaderboard-empty-row {
+        grid-template-columns: 60px 1fr 70px 70px;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    .voter-address {
+        font-size: 0.8rem;
+    }
+}

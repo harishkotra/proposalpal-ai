@@ -1,0 +1,77 @@
+.faq-container .hero-section {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.accordion-item {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    /* Add a subtle transition for the container itself */
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.accordion-item:hover {
+    border-color: #ced4da; /* Slightly darker border on hover */
+}
+
+.accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 1.25rem;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.accordion-icon {
+    transition: transform 0.3s ease-in-out;
+    flex-shrink: 0;
+    margin-left: 1rem;
+    color: var(--gray-color);
+}
+
+.accordion-icon.open {
+    transform: rotate(180deg);
+    color: var(--primary-color);
+}
+
+.accordion-content {
+    max-height: 0; /* Ensures the element has no height when closed */
+    overflow: hidden; /* Hides the content that overflows the 0-height container */
+    transition: max-height 0.3s ease-out; /* Animate the max-height property */
+}
+
+.accordion-content.open {
+    max-height: 500px; /* A value large enough to contain any answer */
+    transition: max-height 0.4s ease-in;
+}
+/* --- END OF FIX --- */
+
+.accordion-content-inner {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    line-height: 1.7;
+    color: var(--gray-color);
+    border-top: 1px solid var(--border-color);
+    margin: 0 1.25rem;
+    padding-top: 1.25rem;
+}
+
+.accordion-content-inner p {
+    margin: 0;
+}

@@ -1,0 +1,11 @@
+.billing-container .hero-section { text-align: center; margin-bottom: 2.5rem; }
+.billing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.status-card, .purchase-card { background: var(--card-background); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; }
+.status-card h3, .purchase-card h3 { margin-top: 0; font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.credit-details p { font-size: 1.1rem; margin: 0.5rem 0; }
+.offer-text { font-size: 1.2rem; }
+.price-text { font-size: 2rem; margin: 1rem 0; }
+.payment-button { width: 100%; padding: 1rem; font-size: 1.1rem; /* reusing styles */ }
+.billing-error { color: var(--red-color); margin-top: 1rem; text-align: center; }
+.billing-success { color: var(--green-color); margin-top: 1rem; text-align: center; }
+@media (max-width: 768px) { .billing-grid { grid-template-columns: 1fr; } }

@@ -1,0 +1,40 @@
+.footer {
+    padding: 1.5rem 1rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white; /* Match your background color */
+    z-index: 1000;
+}
+
+.footer-content {
+  max-width: 800px;
+  margin: 0 auto;
+  color: var(--gray-color);
+}
+
+.footer-content p {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.github-link:hover {
+  background-color: var(--light-gray-color);
+}

@@ -1,0 +1,6 @@
+# Environment variables
+.env.local
+.env.prod
+
+# Database files
+*.db
