@@ -51,7 +51,18 @@ export async function setupDatabase(filename) {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
-
+  
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS translations_cache (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      original_text_hash TEXT NOT NULL,
+      target_language TEXT NOT NULL,
+      translated_text TEXT NOT NULL,
+      cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(original_text_hash, target_language)
+    );
+  `);
+  
   console.log(`Database setup complete. Using file: ${filename}`);
   return db;
 }

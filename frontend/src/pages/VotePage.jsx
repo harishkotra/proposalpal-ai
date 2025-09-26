@@ -19,6 +19,10 @@ export default function VotePage() {
     const [userVotes, setUserVotes] = useState([]);
     const [lastTxHash, setLastTxHash] = useState('');
     const [isVoting, setIsVoting] = useState(false);
+    const [targetLanguage, setTargetLanguage] = useState('Spanish'); // Default language
+    const [translatedSummary, setTranslatedSummary] = useState('');
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translationError, setTranslationError] = useState('');
 
     const { wallet, connected } = useWallet();
     const address = useAddress();
@@ -104,6 +108,26 @@ export default function VotePage() {
         }
     }, [connected, address]);
 
+    const handleTranslate = async () => {
+        if (!cip || !cip.summary) return;
+
+        setIsTranslating(true);
+        setTranslationError('');
+        setTranslatedSummary(''); // Clear previous translations
+
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/translate`, {
+                textToTranslate: cip.summary,
+                targetLanguage: targetLanguage,
+            });
+            setTranslatedSummary(response.data.translatedText);
+        } catch (err) {
+            setTranslationError(err.response?.data?.error || 'Failed to get translation.');
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
     const handleVote = async (voteChoice) => {
         if (!connected || !cip) return;
         setIsVoting(true);
@@ -121,6 +145,8 @@ export default function VotePage() {
             const unsignedTx = await tx.build();
             const signedTx = await wallet.signTx(unsignedTx);
             const txHash = await wallet.submitTx(signedTx);
+            
+            setLastTxHash(txHash);
             
             // After successful transaction, record vote in our DB
             await axios.post(`${import.meta.env.VITE_API_URL}/vote`, {
@@ -191,6 +217,39 @@ export default function VotePage() {
                             <a href={`https://cips.cardano.org/cip/${cip.id}`} target="_blank" rel="noopener noreferrer" className="full-cip-link">
                                 View Full CIP →
                             </a>
+
+                            <div className="translation-section">
+                                <div className="translation-controls">
+                                    <select
+                                        value={targetLanguage}
+                                        onChange={(e) => setTargetLanguage(e.target.value)}
+                                        className="translation-select"
+                                        aria-label="Select language for translation"
+                                    >
+                                        <option value="Spanish">Spanish</option>
+                                        <option value="French">French</option>
+                                        <option value="German">German</option>
+                                        <option value="Japanese">Japanese</option>
+                                        <option value="Chinese">Chinese</option>
+                                        <option value="Hindi">Hindi</option>
+                                        <option value="Portuguese">Portuguese</option>
+                                    </select>
+                                    <button onClick={handleTranslate} disabled={isTranslating} className="translate-button">
+                                        {isTranslating ? 'Translating...' : 'Translate'}
+                                    </button>
+                                </div>
+
+                                {translationError && <p className="error-message">{translationError}</p>}
+                                
+                                {translatedSummary && (
+                                    <div className="translated-summary-container">
+                                        <h4>Summary in {targetLanguage}</h4>
+                                        <div className="summary">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{translatedSummary}</ReactMarkdown>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

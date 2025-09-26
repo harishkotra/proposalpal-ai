@@ -3,7 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { setupDatabase } from './database.js';
 import OpenAI from 'openai';
-import axios from 'axios'; 
+import axios from 'axios';
+import crypto from 'crypto';
 import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'local'}` });
@@ -314,9 +315,56 @@ app.get('/api/credits/:walletAddress', async (req, res) => {
     });
 });
 
-function estimateTokens(text) {
-    return Math.ceil(text.length / 4);
-}
+app.post('/api/translate', async (req, res) => {
+    const { textToTranslate, targetLanguage } = req.body;
+
+    if (!textToTranslate || !targetLanguage) {
+        return res.status(400).json({ error: 'Text and target language are required.' });
+    }
+
+    // 1. Create a stable hash of the original text to use as a cache key.
+    const originalTextHash = crypto.createHash('sha256').update(textToTranslate).digest('hex');
+
+    try {
+        // 2. Check if this exact translation is already in our cache.
+        const cachedTranslation = await db.get(
+            'SELECT * FROM translations_cache WHERE original_text_hash = ? AND target_language = ?',
+            [originalTextHash, targetLanguage]
+        );
+
+        // 3. CACHE HIT: If found, return the cached data instantly.
+        if (cachedTranslation) {
+            console.log(`[CACHE HIT] Serving translation to ${targetLanguage} from cache.`);
+            return res.json({ translatedText: cachedTranslation.translated_text });
+        }
+
+        // 4. CACHE MISS: Proceed with the AI call.
+        console.log(`[CACHE MISS] Generating new translation to ${targetLanguage}.`);
+        
+        const systemPrompt = "You are a professional, multilingual translator. Your task is to translate the given text accurately into the specified target language. Preserve the original markdown formatting (like bold text using **). Do not add any extra commentary, greetings, or explanations before or after the translation.";
+        const userPrompt = `Translate the following text into ${targetLanguage}:\n\n---\n\n${textToTranslate}`;
+
+        const chatCompletion = await gaiaNode.chat.completions.create({
+            model: process.env.GAIA_MODEL_NAME,
+            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+        });
+
+        const translatedText = chatCompletion.choices[0].message.content;
+
+        // 5. Save the new translation to the cache for future requests.
+        await db.run(
+            'INSERT INTO translations_cache (original_text_hash, target_language, translated_text) VALUES (?, ?, ?)',
+            [originalTextHash, targetLanguage, translatedText]
+        );
+        console.log(`[CACHE WRITE] Saved new translation to ${targetLanguage} to cache.`);
+
+        res.json({ translatedText });
+
+    } catch (error) {
+        console.error("Error during translation:", error);
+        res.status(500).json({ error: 'Failed to translate summary. The AI node may be experiencing issues.' });
+    }
+});
 
 app.listen(port, () => {
   console.log(`Backend server running at http://localhost:${port}`);

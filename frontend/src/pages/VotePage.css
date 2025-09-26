@@ -227,3 +227,62 @@
 @media (max-width: 768px) {
   .vote-grid { grid-template-columns: 1fr; }
 }
+
+.translation-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.translation-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.translation-select {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: var(--card-background);
+    color: var(--text-color);
+}
+
+.translate-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background-color: var(--gray-color); /* A more subtle color for a secondary action */
+    color: white;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.translate-button:hover {
+    background-color: #5a6268;
+}
+
+.translate-button:disabled {
+    background-color: #adb5bd;
+    cursor: not-allowed;
+}
+
+.translated-summary-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--light-gray-color);
+    border-radius: 6px;
+}
+
+.translated-summary-container h4 {
+    margin-top: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
