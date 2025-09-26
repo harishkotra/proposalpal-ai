@@ -154,6 +154,11 @@ The application will be available at http://localhost:5173.
 <img width="1799" height="1152" alt="screencapture-localhost-5173-faq-2025-09-25-22_15_51" src="https://github.com/user-attachments/assets/1376f8f8-e408-4c58-8891-d97d6b6ab62e" />
 <img width="1799" height="1152" alt="screencapture-localhost-5173-faq-2025-09-25-22_15_36" src="https://github.com/user-attachments/assets/8003a0c3-8bcb-4a8d-9d54-038b0f459b54" />
 <img width="1799" height="1152" alt="screencapture-localhost-5173-2025-09-25-22_15_27" src="https://github.com/user-attachments/assets/bdf38119-d243-48a4-aaaa-b3fedf4fc21f" />
+<img width="1783" height="1146" alt="Screenshot at Sep 26 09-30-01" src="https://github.com/user-attachments/assets/2baa6b42-26a6-4bdb-ba48-d32c686230ca" />
+<img width="1348" height="2735" alt="screencapture-localhost-5173-2025-09-26-09_29_30" src="https://github.com/user-attachments/assets/30704ec0-1540-42b7-8821-8db0d3b0ad6e" />
+<img width="1348" height="2844" alt="screencapture-localhost-5173-2025-09-26-09_28_55" src="https://github.com/user-attachments/assets/9f91d8a2-f473-4c03-8453-c5403b9846fd" />
+<img width="1799" height="1449" alt="screencapture-localhost-5173-2025-09-26-09_32_04" src="https://github.com/user-attachments/assets/b2853d9c-64cc-4128-a0fe-7a8666204686" />
+<img width="1799" height="1358" alt="screencapture-preprod-cardanoscan-io-transaction-0e7585a9508877a3d82f9bb3430bd6cfa96388223af0cafccba60a85eeae2dc5-2025-09-26-09_38_03" src="https://github.com/user-attachments/assets/38353a13-a80f-4da1-aef1-134fbb70a3fa" />
 
 ### 🤝 Contributing
 
