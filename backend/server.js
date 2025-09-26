@@ -32,84 +32,75 @@ let db;
 })();
 
 // API Endpoints
-app.post('/api/summarize-cip', async (req, res) => {
-    const { cipNumber, walletAddress } = req.body;
 
-    if (!cipNumber || !walletAddress) {
+app.post('/api/summarize-cip', async (req, res) => {
+    const { walletAddress, cipNumber } = req.body;
+
+    if (!walletAddress || !cipNumber) {
         return res.status(400).json({ error: 'CIP number and wallet address are required.' });
     }
 
-    // --- Credit checking logic remains exactly the same ---
-    let user = await db.get('SELECT * FROM users WHERE wallet_address = ?', [walletAddress]);
-    if (!user) {
-        await db.run('INSERT INTO users (wallet_address) VALUES (?)', [walletAddress]);
-        user = { credits_remaining: 500 };
-    }
-    if (user.credits_remaining <= 0) {
-        return res.status(402).json({ error: 'Payment required.' });
-    }
-    // --- End of credit check ---
-
     try {
+
+        const cachedSummary = await db.get('SELECT * FROM summaries_cache WHERE cip_number = ?', [cipNumber]);
+
+        if (cachedSummary) {
+            console.log(`[CACHE HIT] Serving summary for ${cipNumber} from cache.`);
+            // Log this activity for the user's record (but it's free)
+            await db.run(
+                'INSERT INTO activity_log (wallet_address, cip_number, was_cached) VALUES (?, ?, ?)',
+                [walletAddress, cipNumber, true] // true means it was cached
+            );
+            // Return the cached summary and exit
+            return res.json({ title: cachedSummary.title, summary: cachedSummary.summary });
+        }
+
+        console.log(`[CACHE MISS] Generating new summary for ${cipNumber}.`);
+
+        // Check user credits (only happens on a cache miss)
+        let user = await db.get('SELECT * FROM users WHERE wallet_address = ?', [walletAddress]);
+        if (!user) {
+            await db.run('INSERT INTO users (wallet_address) VALUES (?)', [walletAddress]);
+            user = { credits_remaining: 500 };
+        }
+        if (user.credits_remaining <= 0) {
+            return res.status(402).json({ error: 'Payment required.' });
+        }
+
+        // Fetch from GitHub
         const cipContentUrl = `https://raw.githubusercontent.com/cardano-foundation/CIPs/refs/heads/master/${cipNumber}/README.md`;
         const response = await axios.get(cipContentUrl);
         const cipContent = response.data;
 
-        const tokenCount = estimateTokens(cipContent);
-        const CONTEXT_LIMIT = 8192;
-        // Use a safe buffer (e.g., ~7000 tokens for the content) to allow for the prompt text
-        const SAFE_LIMIT = 7500; 
+        // 2. Define the simple, direct prompts
+        const systemPrompt = "You are an expert Cardano analyst. Your task is to summarize the provided text from a Cardano Improvement Proposal (CIP) in simple, easy-to-understand language for a general audience. Your summary should be around 200 words and focus on the problem the CIP solves and its proposed solution.";
+        const userPrompt = `Please summarize the following content from ${cipNumber}:\n\n---\n\n${cipContent}`;
 
-        let finalSummary = '';
+        // 3. Make the single API call to the Gaia Node
+        const chatCompletion = await gaiaNode.chat.completions.create({
+            model: process.env.GAIA_MODEL_NAME,
+            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+        });
 
-        if (tokenCount <= SAFE_LIMIT) {
-            console.log(`[INFO] CIP ${cipNumber} is small enough (${tokenCount} tokens). Using single summary.`);
-            const systemPrompt = "You are an expert Cardano analyst. Your task is to summarize the provided text from a Cardano Improvement Proposal (CIP) in simple, easy-to-understand language for a general audience. Your summary should be around 200 words and focus on the problem the CIP solves and its proposed solution.";
-            const userPrompt = `Please summarize the following content from ${cipNumber}:\n\n---\n\n${cipContent}`;
+        const finalSummary = chatCompletion.choices[0].message.content;
+        const finalTitle = `Summary for ${cipNumber}`;
 
-            const chatCompletion = await gaiaNode.chat.completions.create({
-                model: process.env.GAIA_MODEL_NAME,
-                messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-            });
-            finalSummary = chatCompletion.choices[0].message.content;
-        } 
-        else {
-            console.log(`[INFO] CIP ${cipNumber} is too large (${tokenCount} tokens). Using chunking strategy.`);
+        await db.run(
+            'INSERT INTO summaries_cache (cip_number, title, summary) VALUES (?, ?, ?)',
+            [cipNumber, finalTitle, finalSummary]
+        );
+        console.log(`[CACHE WRITE] Saved new summary for ${cipNumber} to cache.`);
 
-            const chunkSize = SAFE_LIMIT * 3; // Use fewer characters than tokens for safety
-            const chunkOverlap = 500;
-            const chunks = [];
-            for (let i = 0; i < cipContent.length; i += chunkSize - chunkOverlap) {
-                chunks.push(cipContent.substring(i, i + chunkSize));
-            }
-
-            const mapSystemPrompt = "You are part of a summarization pipeline. Summarize the following segment of a technical document. Focus on the key points, specifications, and rationale. This is an intermediate step, not the final summary.";
-            
-            const chunkSummariesPromises = chunks.map(chunk => 
-                gaiaNode.chat.completions.create({
-                    model: process.env.GAIA_MODEL_NAME,
-                    messages: [{ role: "system", content: mapSystemPrompt }, { role: "user", content: chunk }],
-                })
-            );
-            
-            const chunkSummariesResponses = await Promise.all(chunkSummariesPromises);
-            const chunkSummaries = chunkSummariesResponses.map(response => response.choices[0].message.content).join('\n\n---\n\n');
-
-            // REDUCE Step: Create a final summary from the chunk summaries
-            const reduceSystemPrompt = "You are a master synthesizer. You will be given a series of partial summaries from a single large technical document. Your task is to synthesize these pieces into a single, cohesive, and easy-to-understand summary of around 200 words for a general audience.";
-            const reduceUserPrompt = `Please synthesize the following partial summaries into a final summary:\n\n${chunkSummaries}`;
-            
-            const finalCompletion = await gaiaNode.chat.completions.create({
-                model: process.env.GAIA_MODEL_NAME,
-                messages: [{ role: "system", content: reduceSystemPrompt }, { role: "user", content: reduceUserPrompt }],
-            });
-            finalSummary = finalCompletion.choices[0].message.content;
-        }
-
-        // Decrement user's credits ONCE, after all work is done.
+        // 4. Decrement the user's credits
         await db.run('UPDATE users SET credits_remaining = credits_remaining - 1 WHERE wallet_address = ?', [walletAddress]);
         
-        res.json({ title: `Summary for ${cipNumber}`, summary: finalSummary });
+        await db.run(
+            'INSERT INTO activity_log (wallet_address, cip_number, was_cached) VALUES (?, ?, ?)',
+            [walletAddress, cipNumber, false] // false means a credit was spent
+        );
+
+        // Send the newly generated response
+        res.json({ title: finalTitle, summary: finalSummary });
 
     } catch (error) {
         if (error.isAxiosError && error.response && error.response.status === 404) {
@@ -299,15 +290,21 @@ app.get('/api/votes/:walletAddress', async (req, res) => {
 app.get('/api/credits/:walletAddress', async (req, res) => {
     const { walletAddress } = req.params;
 
+    // This value should be consistent with your database default.
+    const DEFAULT_FREE_CREDITS = 500;
+
     let user = await db.get('SELECT * FROM users WHERE wallet_address = ?', [walletAddress]);
+    
+    // If user doesn't exist, create them with the correct defaults
     if (!user) {
-        // If user doesn't exist, create them with free credits
-        await db.run('INSERT INTO users (wallet_address) VALUES (?)', [walletAddress]);
-        user = { credits_remaining: 500, credits_purchased: 0 }; 
+        await db.run('INSERT INTO users (wallet_address, credits_remaining, credits_purchased) VALUES (?, ?, ?)', [walletAddress, DEFAULT_FREE_CREDITS, 0]);
+        // Set the user object to reflect the newly created state
+        user = { credits_remaining: DEFAULT_FREE_CREDITS, credits_purchased: 0 };
     }
 
-    const freeCredits = 100;
-    const totalCredits = freeCredits + user.credits_purchased;
+    const totalCredits = DEFAULT_FREE_CREDITS + user.credits_purchased;
+    
+    // 2. Consumed credits is the difference between the total and what remains.
     const consumedCredits = totalCredits - user.credits_remaining;
 
     res.json({

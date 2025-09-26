@@ -179,13 +179,14 @@ export default function VotePage() {
                     
                     {cip && (
                         <div className="cip-details">
-                            <h3>Summary for {cip.id}</h3>
                             <h4>AI Summary</h4>
                             
                             {/* Use ReactMarkdown to render the summary */}
-                            <ReactMarkdown className="summary" remarkPlugins={[remarkGfm]}>
-                                {cip.summary}
-                            </ReactMarkdown>
+                            <div className="summary">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {cip.summary}
+                                </ReactMarkdown>
+                            </div>
 
                             <a href={`https://cips.cardano.org/cip/${cip.id}`} target="_blank" rel="noopener noreferrer" className="full-cip-link">
                                 View Full CIP →

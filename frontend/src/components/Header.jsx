@@ -59,7 +59,7 @@ export default function Header() {
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
           </button>
           <div className="wallet-connector">
-            <CardanoWallet />
+            <CardanoWallet persist={true} />
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { open } from 'sqlite';
 // The function now accepts the filename
 export async function setupDatabase(filename) { 
   const db = await open({
-    filename, // Use the passed filename
+    filename,
     driver: sqlite3.Database,
   });
 
@@ -30,6 +30,25 @@ export async function setupDatabase(filename) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS claimed_transactions (
       tx_hash TEXT PRIMARY KEY
+    );
+  `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS summaries_cache (
+      cip_number TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      cached_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      wallet_address TEXT NOT NULL,
+      cip_number TEXT NOT NULL,
+      was_cached BOOLEAN NOT NULL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
