@@ -140,6 +140,21 @@ npm run dev
 
 The application will be available at http://localhost:5173.
 
+### 📷 Screenshots
+
+<img width="1799" height="1152" alt="screencapture-localhost-5173-dashboard-2025-09-26-09_10_36" src="https://github.com/user-attachments/assets/3259f4d6-65c9-4e5b-963f-a5bef5444281" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-leaderboard-2025-09-26-09_10_27" src="https://github.com/user-attachments/assets/b1bed2bb-03c8-4eff-badb-64406377fa01" />
+<img width="1797" height="1149" alt="ppi-purchase-credits" src="https://github.com/user-attachments/assets/d8b55c46-0b3b-481e-ac8c-6ac4063a4ae7" />
+<img width="1793" height="1151" alt="ppai-dark-mode" src="https://github.com/user-attachments/assets/431ef957-bc52-472b-b76a-736d20c48259" />
+<img width="1799" height="1477" alt="screencapture-localhost-5173-2025-09-26-09_06_01" src="https://github.com/user-attachments/assets/3b9c44c4-c970-45d0-99df-b51b7703bec4" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-billing-2025-09-25-22_23_06" src="https://github.com/user-attachments/assets/c01f1d58-d3f3-48af-8293-e65b62baaa96" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-2025-09-25-22_18_28" src="https://github.com/user-attachments/assets/d486c93d-caed-4e9b-b026-5423570d2a33" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-leaderboard-2025-09-25-22_16_06" src="https://github.com/user-attachments/assets/89a2e3d7-9db8-4488-8023-224fc22db25b" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-dashboard-2025-09-25-22_16_00" src="https://github.com/user-attachments/assets/131649bf-532d-4c6c-8b0f-c1f845803676" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-faq-2025-09-25-22_15_51" src="https://github.com/user-attachments/assets/1376f8f8-e408-4c58-8891-d97d6b6ab62e" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-faq-2025-09-25-22_15_36" src="https://github.com/user-attachments/assets/8003a0c3-8bcb-4a8d-9d54-038b0f459b54" />
+<img width="1799" height="1152" alt="screencapture-localhost-5173-2025-09-25-22_15_27" src="https://github.com/user-attachments/assets/bdf38119-d243-48a4-aaaa-b3fedf4fc21f" />
+
 ### 🤝 Contributing
 
 Contributions are welcome! If you have suggestions or want to improve the code, please feel free to fork the repository, create a new branch, and submit a pull request.
