@@ -6,11 +6,13 @@ import DashboardPage from './pages/DashboardPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import BillingPage from './pages/BillingPage';
 import FAQPage from './pages/FAQPage'; 
+import { Analytics } from "@vercel/analytics/next"
 
 function App() {
   return (
     <>
       <Header />
+      <Analytics />
       <main className="container">
         <Routes>
           <Route path="/" element={<VotePage />} />
