@@ -357,6 +357,10 @@ The application will be available at http://localhost:5173.
 
 ### 📷 Screenshots
 
+October 2025
+[<img width="1447" height="845" alt="image" src="https://github.com/user-attachments/assets/69fe90c0-f6c2-43a9-b113-fdf9644ee7ba" />](https://preprod.cardanoscan.io/transaction/2574dc3965bfcc2dd57925bf4d7ca1c6cb50dbb673dc9059641fc35341cca989)
+
+
 <img width="1799" height="1152" alt="screencapture-localhost-5173-dashboard-2025-09-26-09_10_36" src="https://github.com/user-attachments/assets/3259f4d6-65c9-4e5b-963f-a5bef5444281" />
 <img width="1799" height="1152" alt="screencapture-localhost-5173-leaderboard-2025-09-26-09_10_27" src="https://github.com/user-attachments/assets/b1bed2bb-03c8-4eff-badb-64406377fa01" />
 <img width="1797" height="1149" alt="ppi-purchase-credits" src="https://github.com/user-attachments/assets/d8b55c46-0b3b-481e-ac8c-6ac4063a4ae7" />
