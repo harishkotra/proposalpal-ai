@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAddress } from '@meshsdk/react';
+import Badge from '../components/Badge';
 import './DashboardPage.css'; // Import the new styles
 
 const API_URL = 'http://localhost:3001/api';
@@ -18,6 +19,8 @@ const ExternalLinkIcon = () => (
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [badges, setBadges] = useState([]);
+  const [loadingBadges, setLoadingBadges] = useState(false);
   const address = useAddress();
 
   useEffect(() => {
@@ -31,9 +34,21 @@ export default function DashboardPage() {
           console.error("Failed to fetch dashboard data:", err);
         })
         .finally(() => setLoading(false));
+
+      // Fetch badges
+      setLoadingBadges(true);
+      axios.get(`${import.meta.env.VITE_API_URL}/badges/${address}`)
+        .then(response => {
+          setBadges(response.data);
+        })
+        .catch(err => {
+          console.error("Failed to fetch badges:", err);
+        })
+        .finally(() => setLoadingBadges(false));
     } else {
       setLoading(false);
       setDashboardData(null);
+      setBadges([]);
     }
   }, [address]);
 
@@ -71,7 +86,23 @@ export default function DashboardPage() {
                 <p>Leaderboard Rank</p>
             </div>
         </div>
-        
+
+        {/* --- Badges Section --- */}
+        <div className="badges-section">
+            <h2>Your Achievements</h2>
+            {loadingBadges ? (
+                <p>Loading badges...</p>
+            ) : badges.length > 0 ? (
+                <div className="badges-grid">
+                    {badges.map((badge, index) => (
+                        <Badge key={index} badge={badge} showDescription={true} size="medium" />
+                    ))}
+                </div>
+            ) : (
+                <p>No badges earned yet. Keep voting to earn achievements!</p>
+            )}
+        </div>
+
         {/* --- Voting History --- */}
         <div className="history-section">
             <h2>Your Voting History</h2>

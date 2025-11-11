@@ -15,3 +15,7 @@ lerna-debug.log*
 /frontend/dist/
 /backend/*.db
 /backend/*.db-journal
+
+CLAUDE.md
+.claude
+FEATURE_IDEAS.md

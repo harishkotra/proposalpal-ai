@@ -6,6 +6,7 @@ import OpenAI from 'openai';
 import axios from 'axios';
 import crypto from 'crypto';
 import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
+import { BADGES, checkUserBadges, getNewBadges } from './badges.js';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'local'}` });
 const app = express();
@@ -27,9 +28,18 @@ const blockfrost = new BlockFrostAPI({
 
 
 let db;
-(async () => {
+
+// Initialize database before starting server
+async function initializeServer() {
     db = await setupDatabase();
-})();
+    console.log('Database initialized successfully');
+}
+
+// Start initialization
+initializeServer().catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+});
 
 // --- API Endpoints ---
 
@@ -83,7 +93,36 @@ app.post('/api/vote', async (req, res) => {
     if (!walletAddress || !cipNumber || !voteChoice) return res.status(400).json({ error: 'Missing fields' });
     try {
         const result = await db.query('INSERT INTO votes (wallet_address, cip_number, vote_choice) VALUES ($1, $2, $3) RETURNING id', [walletAddress, cipNumber, voteChoice]);
-        res.status(201).json({ success: true, id: result.rows[0].id });
+
+        // Check for new badges after voting
+        try {
+            const storedResult = await db.query(
+                'SELECT badge_id FROM user_badges WHERE wallet_address = $1',
+                [walletAddress]
+            );
+            const storedBadgeIds = storedResult.rows.map(row => row.badge_id);
+            const earnedBadgeIds = await checkUserBadges(db, walletAddress);
+            const newBadgeIds = getNewBadges(storedBadgeIds, earnedBadgeIds);
+
+            // Award new badges
+            for (const badgeId of newBadgeIds) {
+                await db.query(
+                    'INSERT INTO user_badges (wallet_address, badge_id) VALUES ($1, $2)',
+                    [walletAddress, badgeId]
+                );
+            }
+
+            // Return vote success with new badges
+            const newBadges = newBadgeIds.map(badgeId =>
+                BADGES[Object.keys(BADGES).find(key => BADGES[key].id === badgeId)]
+            ).filter(badge => badge !== undefined);
+
+            res.status(201).json({ success: true, id: result.rows[0].id, newBadges });
+        } catch (badgeError) {
+            console.error('Error checking badges after vote:', badgeError);
+            // Still return success for the vote even if badge checking fails
+            res.status(201).json({ success: true, id: result.rows[0].id, newBadges: [] });
+        }
     } catch (error) {
         if (error.code === '23505') return res.status(409).json({ error: 'User has already voted on this CIP' });
         res.status(500).json({ error: 'Database error', details: error.message });
@@ -119,9 +158,16 @@ app.post('/api/confirm-payment', async (req, res) => {
 
 app.get('/api/leaderboard', async (req, res) => {
     try {
+        if (!db) {
+            console.error('Database not initialized yet');
+            return res.status(503).json({ error: 'Database not ready' });
+        }
         const result = await db.query(`SELECT wallet_address, COUNT(id)::int as votes, COUNT(id)::int as points FROM votes GROUP BY wallet_address ORDER BY points DESC`);
         res.json(result.rows);
-    } catch (error) { res.status(500).json({ error: 'Database error' }); }
+    } catch (error) {
+        console.error('Leaderboard error:', error);
+        res.status(500).json({ error: 'Database error', details: error.message });
+    }
 });
 
 app.get('/api/dashboard/:walletAddress', async (req, res) => {
@@ -141,6 +187,39 @@ app.get('/api/votes/:walletAddress', async (req, res) => {
         const result = await db.query('SELECT cip_number, vote_choice FROM votes WHERE wallet_address = $1', [walletAddress]);
         res.json(result.rows);
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
+});
+
+app.get('/api/vote-stats/:cipNumber', async (req, res) => {
+    const { cipNumber } = req.params;
+    try {
+        const result = await db.query(`
+            SELECT
+                vote_choice,
+                COUNT(*)::int as count
+            FROM votes
+            WHERE cip_number = $1
+            GROUP BY vote_choice
+        `, [cipNumber]);
+
+        // Calculate totals
+        const stats = {
+            yes: 0,
+            no: 0,
+            abstain: 0,
+            total: 0
+        };
+
+        result.rows.forEach(row => {
+            const choice = row.vote_choice.toLowerCase();
+            stats[choice] = row.count;
+            stats.total += row.count;
+        });
+
+        res.json(stats);
+    } catch (error) {
+        console.error('Vote stats error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 
 app.get('/api/credits/:walletAddress', async (req, res) => {
@@ -171,6 +250,135 @@ app.post('/api/translate', async (req, res) => {
         await db.query('INSERT INTO translations_cache (original_text_hash, target_language, translated_text) VALUES ($1, $2, $3)', [originalTextHash, targetLanguage, translatedText]);
         res.json({ translatedText });
     } catch (error) { res.status(500).json({ error: 'Failed to translate summary.' }); }
+});
+
+app.post('/api/community-insights', async (req, res) => {
+    const { cipNumber } = req.body;
+    if (!cipNumber) return res.status(400).json({ error: 'CIP number required.' });
+
+    try {
+        // Check cache first
+        const cipHash = crypto.createHash('sha256').update(cipNumber).digest('hex');
+        const cachedResult = await db.query('SELECT insights FROM community_insights_cache WHERE cip_hash = $1', [cipHash]);
+        if (cachedResult.rows[0]) {
+            console.log(`[CACHE HIT] Serving community insights for ${cipNumber} from cache.`);
+            return res.json({ insights: cachedResult.rows[0].insights });
+        }
+
+        console.log(`[CACHE MISS] Generating new community insights for ${cipNumber}.`);
+
+        // Step 1: Search Cardano forum for the CIP
+        const searchUrl = `https://forum.cardano.org/search.json?q=${cipNumber}`;
+        const searchResponse = await axios.get(searchUrl);
+
+        const postIds = searchResponse.data?.grouped_search_result?.post_ids || [];
+
+        if (postIds.length === 0) {
+            return res.json({ insights: 'No community discussions found for this CIP on the Cardano forum.' });
+        }
+
+        // Step 2: Fetch all posts details
+        const postPromises = postIds.map(postId =>
+            axios.get(`https://forum.cardano.org/posts/${postId}.json`)
+                .then(response => response.data.raw)
+                .catch(error => {
+                    console.error(`Failed to fetch post ${postId}:`, error.message);
+                    return null;
+                })
+        );
+
+        const postContents = await Promise.all(postPromises);
+        const validPosts = postContents.filter(content => content !== null);
+
+        if (validPosts.length === 0) {
+            return res.json({ insights: 'Unable to fetch community discussion details for this CIP.' });
+        }
+
+        // Step 3: Combine all posts and summarize community sentiment
+        const combinedContent = validPosts.join('\n\n---\n\n');
+        const systemPrompt = "You are an expert Cardano community analyst. Your task is to analyze community discussions and extract key insights, sentiment, and important points of debate or consensus.";
+        const userPrompt = `Analyze the following community forum discussions about ${cipNumber} and provide a concise summary of:\n1. Overall community sentiment (positive, negative, mixed, neutral)\n2. Key points of support or opposition\n3. Main concerns or questions raised\n4. Areas of consensus or debate\n\nForum discussions:\n\n${combinedContent}`;
+
+        const chatCompletion = await gaiaNode.chat.completions.create({
+            model: process.env.GAIA_MODEL_NAME,
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+            ]
+        });
+
+        const insights = chatCompletion.choices[0].message.content;
+
+        // Cache the results
+        await db.query('INSERT INTO community_insights_cache (cip_hash, cip_number, insights) VALUES ($1, $2, $3)', [cipHash, cipNumber, insights]);
+
+        res.json({ insights });
+    } catch (error) {
+        console.error('Error fetching community insights:', error);
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+            return res.status(404).json({ error: 'Forum data not found.' });
+        }
+        res.status(500).json({ error: 'Failed to fetch community insights.' });
+    }
+});
+
+// Get all earned badges for a user
+app.get('/api/badges/:walletAddress', async (req, res) => {
+    const { walletAddress } = req.params;
+    try {
+        const result = await db.query(
+            'SELECT badge_id, earned_at FROM user_badges WHERE wallet_address = $1 ORDER BY earned_at DESC',
+            [walletAddress]
+        );
+
+        // Enrich with badge details
+        const earnedBadges = result.rows.map(row => ({
+            ...BADGES[Object.keys(BADGES).find(key => BADGES[key].id === row.badge_id)],
+            earnedAt: row.earned_at
+        }));
+
+        res.json(earnedBadges);
+    } catch (error) {
+        console.error('Error fetching badges:', error);
+        res.status(500).json({ error: 'Failed to fetch badges' });
+    }
+});
+
+// Check and award new badges
+app.post('/api/badges/check/:walletAddress', async (req, res) => {
+    const { walletAddress } = req.params;
+    try {
+        // Get currently stored badges
+        const storedResult = await db.query(
+            'SELECT badge_id FROM user_badges WHERE wallet_address = $1',
+            [walletAddress]
+        );
+        const storedBadgeIds = storedResult.rows.map(row => row.badge_id);
+
+        // Check what badges should be earned
+        const earnedBadgeIds = await checkUserBadges(db, walletAddress);
+
+        // Find new badges
+        const newBadgeIds = getNewBadges(storedBadgeIds, earnedBadgeIds);
+
+        // Award new badges
+        for (const badgeId of newBadgeIds) {
+            await db.query(
+                'INSERT INTO user_badges (wallet_address, badge_id) VALUES ($1, $2)',
+                [walletAddress, badgeId]
+            );
+        }
+
+        // Return new badges with full details
+        const newBadges = newBadgeIds.map(badgeId =>
+            BADGES[Object.keys(BADGES).find(key => BADGES[key].id === badgeId)]
+        ).filter(badge => badge !== undefined);
+
+        res.json({ newBadges });
+    } catch (error) {
+        console.error('Error checking badges:', error);
+        res.status(500).json({ error: 'Failed to check badges' });
+    }
 });
 
 app.listen(port, () => {
