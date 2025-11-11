@@ -23,6 +23,9 @@ export default function VotePage() {
     const [translatedSummary, setTranslatedSummary] = useState('');
     const [isTranslating, setIsTranslating] = useState(false);
     const [translationError, setTranslationError] = useState('');
+    const [communityInsights, setCommunityInsights] = useState('');
+    const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+    const [insightsError, setInsightsError] = useState('');
 
     const { wallet, connected } = useWallet();
     const address = useAddress();
@@ -38,6 +41,8 @@ export default function VotePage() {
         setError('');
         setCip(null);
         setIsOutOfCredits(false);
+        setCommunityInsights('');
+        setInsightsError('');
 
         try {
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/summarize-cip`, {
@@ -46,6 +51,9 @@ export default function VotePage() {
             });
             setCip({ id: searchInput, ...response.data });
             await fetchCredits();
+
+            // Fetch community insights in the background
+            fetchCommunityInsights(searchInput);
 
         } catch (err) {
             if (err.response && err.response.status === 402) {
@@ -56,6 +64,24 @@ export default function VotePage() {
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchCommunityInsights = async (cipNumber) => {
+        setIsLoadingInsights(true);
+        setInsightsError('');
+        setCommunityInsights('');
+
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/community-insights`, {
+                cipNumber: cipNumber,
+            });
+            setCommunityInsights(response.data.insights);
+        } catch (err) {
+            console.error('Failed to fetch community insights:', err);
+            setInsightsError('Unable to load community insights at this time.');
+        } finally {
+            setIsLoadingInsights(false);
         }
     };
 
@@ -240,13 +266,32 @@ export default function VotePage() {
                                 </div>
 
                                 {translationError && <p className="error-message">{translationError}</p>}
-                                
+
                                 {translatedSummary && (
                                     <div className="translated-summary-container">
                                         <h4>Summary in {targetLanguage}</h4>
                                         <div className="summary">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{translatedSummary}</ReactMarkdown>
                                         </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="community-insights-section">
+                                <h4>Community Insights</h4>
+                                {isLoadingInsights && (
+                                    <div className="loading-insights">
+                                        <p>Loading community discussions...</p>
+                                    </div>
+                                )}
+                                {insightsError && (
+                                    <p className="error-message">{insightsError}</p>
+                                )}
+                                {communityInsights && !isLoadingInsights && (
+                                    <div className="insights-content">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {communityInsights}
+                                        </ReactMarkdown>
                                     </div>
                                 )}
                             </div>

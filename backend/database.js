@@ -137,6 +137,17 @@ export async function setupDatabase() {
             );
         `);
 
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS community_insights_cache (
+              id SERIAL PRIMARY KEY,
+              cip_hash TEXT NOT NULL,
+              cip_number TEXT NOT NULL,
+              insights TEXT NOT NULL,
+              cached_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(cip_hash)
+            );
+        `);
+
         console.log('Database schema checked/initialized successfully.');
     } catch (err) {
         console.error('Error during database setup:', err);

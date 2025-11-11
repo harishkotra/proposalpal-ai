@@ -286,3 +286,52 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+.community-insights-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.community-insights-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-color);
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.loading-insights {
+    padding: 1.5rem;
+    text-align: center;
+    background-color: var(--light-gray-color);
+    border-radius: 6px;
+    color: var(--gray-color);
+}
+
+.insights-content {
+    padding: 1rem;
+    background-color: var(--light-gray-color);
+    border-radius: 6px;
+    line-height: 1.7;
+}
+
+.insights-content p {
+    margin: 0 0 1em 0;
+}
+
+.insights-content strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.insights-content ul,
+.insights-content ol {
+    margin: 0 0 1em 0;
+    padding-left: 1.5rem;
+}
+
+.insights-content li {
+    margin-bottom: 0.5rem;
+}

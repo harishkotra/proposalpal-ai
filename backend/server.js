@@ -173,6 +173,76 @@ app.post('/api/translate', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Failed to translate summary.' }); }
 });
 
+app.post('/api/community-insights', async (req, res) => {
+    const { cipNumber } = req.body;
+    if (!cipNumber) return res.status(400).json({ error: 'CIP number required.' });
+
+    try {
+        // Check cache first
+        const cipHash = crypto.createHash('sha256').update(cipNumber).digest('hex');
+        const cachedResult = await db.query('SELECT insights FROM community_insights_cache WHERE cip_hash = $1', [cipHash]);
+        if (cachedResult.rows[0]) {
+            console.log(`[CACHE HIT] Serving community insights for ${cipNumber} from cache.`);
+            return res.json({ insights: cachedResult.rows[0].insights });
+        }
+
+        console.log(`[CACHE MISS] Generating new community insights for ${cipNumber}.`);
+
+        // Step 1: Search Cardano forum for the CIP
+        const searchUrl = `https://forum.cardano.org/search.json?q=${cipNumber}`;
+        const searchResponse = await axios.get(searchUrl);
+
+        const postIds = searchResponse.data?.grouped_search_result?.post_ids || [];
+
+        if (postIds.length === 0) {
+            return res.json({ insights: 'No community discussions found for this CIP on the Cardano forum.' });
+        }
+
+        // Step 2: Fetch all posts details
+        const postPromises = postIds.map(postId =>
+            axios.get(`https://forum.cardano.org/posts/${postId}.json`)
+                .then(response => response.data.raw)
+                .catch(error => {
+                    console.error(`Failed to fetch post ${postId}:`, error.message);
+                    return null;
+                })
+        );
+
+        const postContents = await Promise.all(postPromises);
+        const validPosts = postContents.filter(content => content !== null);
+
+        if (validPosts.length === 0) {
+            return res.json({ insights: 'Unable to fetch community discussion details for this CIP.' });
+        }
+
+        // Step 3: Combine all posts and summarize community sentiment
+        const combinedContent = validPosts.join('\n\n---\n\n');
+        const systemPrompt = "You are an expert Cardano community analyst. Your task is to analyze community discussions and extract key insights, sentiment, and important points of debate or consensus.";
+        const userPrompt = `Analyze the following community forum discussions about ${cipNumber} and provide a concise summary of:\n1. Overall community sentiment (positive, negative, mixed, neutral)\n2. Key points of support or opposition\n3. Main concerns or questions raised\n4. Areas of consensus or debate\n\nForum discussions:\n\n${combinedContent}`;
+
+        const chatCompletion = await gaiaNode.chat.completions.create({
+            model: process.env.GAIA_MODEL_NAME,
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+            ]
+        });
+
+        const insights = chatCompletion.choices[0].message.content;
+
+        // Cache the results
+        await db.query('INSERT INTO community_insights_cache (cip_hash, cip_number, insights) VALUES ($1, $2, $3)', [cipHash, cipNumber, insights]);
+
+        res.json({ insights });
+    } catch (error) {
+        console.error('Error fetching community insights:', error);
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+            return res.status(404).json({ error: 'Forum data not found.' });
+        }
+        res.status(500).json({ error: 'Failed to fetch community insights.' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Backend server running at http://localhost:${port}`);
     console.log(`Using environment: ${process.env.NODE_ENV || 'local'}`);
