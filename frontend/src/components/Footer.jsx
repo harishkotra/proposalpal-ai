@@ -6,10 +6,10 @@ export default function Footer() {
         <footer className="footer">
             <div className="footer-content">
                 <p>
-                    Built by <strong>Harish Kotra</strong> for the Cardano Community. Supported by <strong>Intersect MBO</strong>.
+                    Built by <strong>Harish Kotra</strong> for the Cardano Community.
                 </p>
                 <a 
-                    href="https://github.com/harishkotra/proposalpal-ai" // <-- IMPORTANT: Change this URL
+                    href="https://github.com/harishkotra/proposalpal-ai"
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="github-link"

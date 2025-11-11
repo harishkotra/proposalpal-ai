@@ -1,18 +1,16 @@
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
-import Footer from './components/Footer'; 
+import Footer from './components/Footer';
 import VotePage from './pages/VotePage';
 import DashboardPage from './pages/DashboardPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import BillingPage from './pages/BillingPage';
-import FAQPage from './pages/FAQPage'; 
-import { Analytics } from "@vercel/analytics/next"
+import FAQPage from './pages/FAQPage';
 
 function App() {
   return (
     <>
       <Header />
-      <Analytics />
       <main className="container">
         <Routes>
           <Route path="/" element={<VotePage />} />

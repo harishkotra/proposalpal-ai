@@ -1,0 +1,86 @@
+.badge-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+}
+
+.badge-item.badge-small {
+    gap: 0.5rem;
+    padding: 0.25rem;
+}
+
+.badge-item.badge-large {
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.badge-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid;
+    background: white;
+    flex-shrink: 0;
+}
+
+.badge-small .badge-icon {
+    width: 32px;
+    height: 32px;
+    border-width: 2px;
+}
+
+.badge-large .badge-icon {
+    width: 64px;
+    height: 64px;
+    border-width: 4px;
+}
+
+.badge-emoji {
+    font-size: 24px;
+}
+
+.badge-small .badge-emoji {
+    font-size: 16px;
+}
+
+.badge-large .badge-emoji {
+    font-size: 32px;
+}
+
+.badge-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.badge-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-color);
+}
+
+.badge-small .badge-name {
+    font-size: 0.85rem;
+}
+
+.badge-large .badge-name {
+    font-size: 1.1rem;
+}
+
+.badge-description {
+    font-size: 0.85rem;
+    color: var(--gray-color);
+    line-height: 1.4;
+}
+
+.badge-small .badge-description {
+    font-size: 0.75rem;
+}
+
+.badge-large .badge-description {
+    font-size: 0.9rem;
+}

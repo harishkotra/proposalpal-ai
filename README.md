@@ -5,8 +5,9 @@
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-A dApp that simplifies participation in Cardano governance. Get instant, easy-to-understand AI summaries of complex Cardano Improvement Proposals (CIPs), vote directly from your wallet, and track your engagement on the community leaderboard.
+A comprehensive dApp that simplifies participation in Cardano governance. Get instant AI summaries of complex Cardano Improvement Proposals (CIPs), analyze community sentiment, vote directly from your wallet, earn achievements, and track your engagement on the leaderboard.
 
 ---
 
@@ -16,15 +17,35 @@ A dApp that simplifies participation in Cardano governance. Get instant, easy-to
     -   Utilizes **Gaia Node** to provide AI-powered summaries of any CIP.
     -   Employs a **Retrieval-Augmented Generation (RAG)** model for maximum accuracy by fetching the latest CIP content directly from GitHub.
     -   Gracefully handles even the largest CIPs by automatically chunking and summarizing content that exceeds the AI's context window.
+    -   **Multilingual Translation**: Translate CIP summaries into multiple languages for global accessibility.
+    -   **Smart Caching**: Efficient caching system to minimize API calls and improve performance.
+
+-   **🌐 Community Insights & Analytics**:
+    -   **Forum Analysis**: Automatically fetches and analyzes discussions from the Cardano forum.
+    -   **Sentiment Analysis**: AI-powered analysis of community sentiment on CIPs.
+    -   **Vote Distribution**: Real-time visualization of how the community is voting (Yes/No/Abstain).
+    -   **Collapsible Sections**: Clean, organized UI with expandable content sections.
+
+-   **🏆 Achievements & Gamification**:
+    -   **Badge System**: Earn 12 unique badges across 4 tiers (Bronze, Silver, Gold, Platinum).
+    -   **Real-time Notifications**: Beautiful toast notifications when earning new achievements.
+    -   **Achievement Types**:
+        -   Vote-based: First Vote, Active Voter (10 votes), Dedicated Voter (50 votes), Governance Champion (100 votes)
+        -   Leaderboard: Top 10, Top 3, Leaderboard King (#1)
+        -   Engagement: Community Voice (5 votes in one day)
+        -   Support: Supporter, Power User (credit purchases)
+    -   **Dashboard Display**: View all earned badges with descriptions on your personal dashboard.
 
 -   **🔗 Seamless Wallet Integration**:
     -   Powered by **MeshJS SDK** for robust and reliable wallet connections.
     -   Supports a wide range of browser wallets (Vespr, Nami, Eternl, Yoroi, Flint, etc.).
 
--   **🗳️ Interactive Governance & Gamification**:
+-   **🗳️ Interactive Governance**:
     -   Cast Yes/No/Abstain votes on CIPs, recorded as on-chain transaction metadata.
+    -   **Sticky Voting Card**: Vote controls remain visible while scrolling through long CIP content.
+    -   **Automatic Badge Awards**: Earn achievements automatically after voting.
     -   **Gamified Leaderboard** where users earn points for each vote.
-    -   **Personal Dashboard** to track voting history, points, and leaderboard rank.
+    -   **Personal Dashboard** to track voting history, points, leaderboard rank, and badges.
 
 -   **💳 Credit & On-Chain Payment System**:
     -   New users receive **500 free AI summary credits**.
@@ -34,6 +55,7 @@ A dApp that simplifies participation in Cardano governance. Get instant, easy-to
 -   **✨ Modern User Experience**:
     -   Clean, responsive UI that works on all devices.
     -   **Dark Mode / Light Mode** switcher with persistence via `localStorage`.
+    -   **Feature Highlight Cards**: Quick overview of key platform capabilities.
     -   Comprehensive **FAQ page** with interactive accordions.
 
 ### 🛠️ Technology Stack
@@ -44,14 +66,167 @@ A dApp that simplifies participation in Cardano governance. Get instant, easy-to
     -   **Routing**: React Router
     -   **Styling**: Plain CSS with CSS Variables
     -   **UI/Icons**: Lucide React
-    -   **Markdown Rendering**: React Markdown
+    -   **Markdown Rendering**: React Markdown with remark-gfm
 
 -   **Backend**:
     -   **Runtime**: Node.js
     -   **Framework**: Express.js
-    -   **Database**: SQLite 3
+    -   **Database**: SQLite 3 (local development) / PostgreSQL (production)
+    -   **Database Abstraction**: Unified query interface supporting both SQLite and PostgreSQL
     -   **AI Integration**: OpenAI Node.js Library (for Gaia Node compatibility)
     -   **Blockchain Integration**: Blockfrost JS SDK
+    -   **External APIs**: Cardano Forum API for community insights
+
+---
+
+### 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph "Frontend - React + Vite"
+        A[User Interface]
+        B[Wallet Integration<br/>MeshJS]
+        C[State Management<br/>Context API]
+        D[Components]
+        E[Badge System]
+    end
+
+    subgraph "Backend - Express.js"
+        F[API Endpoints]
+        G[Database Layer<br/>SQLite/PostgreSQL]
+        H[AI Service<br/>Gaia Node]
+        I[Blockchain Service<br/>Blockfrost API]
+        J[Forum Service<br/>Cardano Forum API]
+        K[Badge Engine]
+    end
+
+    subgraph "External Services"
+        L[Gaia Node AI]
+        M[GitHub CIP Repo]
+        N[Cardano Blockchain]
+        O[Cardano Forum]
+        P[Blockfrost API]
+    end
+
+    subgraph "Database"
+        Q[(SQLite/PostgreSQL)]
+        R[Users & Credits]
+        S[Votes & History]
+        T[Cache Tables]
+        U[User Badges]
+    end
+
+    A --> B
+    A --> D
+    D --> E
+    B --> F
+    C --> F
+
+    F --> G
+    F --> H
+    F --> I
+    F --> J
+    F --> K
+
+    H --> L
+    H --> M
+    I --> P
+    J --> O
+    P --> N
+
+    G --> Q
+    Q --> R
+    Q --> S
+    Q --> T
+    Q --> U
+
+    K --> U
+    K --> S
+
+    style A fill:#61DAFB
+    style B fill:#1B4F72
+    style F fill:#339933
+    style G fill:#003B57
+    style H fill:#FF6F00
+    style L fill:#412991
+    style N fill:#0033AD
+    style Q fill:#316192
+```
+
+### 📊 Data Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User/Wallet
+    participant F as Frontend
+    participant B as Backend
+    participant AI as Gaia Node
+    participant GH as GitHub
+    participant CF as Cardano Forum
+    participant DB as Database
+    participant BC as Blockchain
+
+    U->>F: Connect Wallet
+    F->>B: Request CIP Summary
+    B->>DB: Check Cache
+
+    alt Cache Hit
+        DB-->>B: Return Cached Summary
+    else Cache Miss
+        B->>GH: Fetch CIP Content
+        GH-->>B: CIP Markdown
+        B->>AI: Generate Summary
+        AI-->>B: AI Summary
+        B->>DB: Store in Cache
+    end
+
+    B->>CF: Fetch Community Discussions
+    CF-->>B: Forum Posts
+    B->>AI: Analyze Sentiment
+    AI-->>B: Insights
+    B->>DB: Cache Insights
+
+    B-->>F: Summary + Insights + Vote Stats
+    F-->>U: Display Content
+
+    U->>F: Cast Vote (Yes/No/Abstain)
+    F->>BC: Submit Transaction with Metadata
+    BC-->>F: Transaction Hash
+    F->>B: Record Vote + Check Badges
+    B->>DB: Store Vote
+    B->>DB: Check & Award Badges
+    DB-->>B: New Badges
+    B-->>F: Vote Success + New Badges
+    F-->>U: Show Badge Notification
+```
+
+---
+
+### 📦 Database Schema
+
+The application uses a flexible database abstraction layer that supports both SQLite (development) and PostgreSQL (production):
+
+**Tables:**
+- `users` - User profiles with credit balances and purchases
+- `votes` - All voting records with timestamps
+- `claimed_transactions` - Payment transaction tracking (anti-fraud)
+- `summaries_cache` - Cached CIP summaries
+- `community_insights_cache` - Cached forum analysis
+- `translations_cache` - Cached translations
+- `activity_log` - User activity tracking
+- `user_badges` - Achievement records with earned timestamps
+
+**Key Endpoints:**
+- `POST /api/summarize-cip` - Generate or retrieve CIP summary
+- `POST /api/vote` - Record vote and check for new badges
+- `GET /api/badges/:walletAddress` - Get user's earned badges
+- `POST /api/badges/check/:walletAddress` - Manually check for new badges
+- `POST /api/community-insights` - Fetch forum sentiment analysis
+- `POST /api/translate` - Translate summaries
+- `GET /api/vote-stats/:cipNumber` - Get vote distribution
+- `GET /api/leaderboard` - Get rankings
+- `GET /api/dashboard/:walletAddress` - Get user dashboard data
+- `POST /api/confirm-payment` - Verify on-chain payment
 
 ---
 
@@ -140,6 +315,46 @@ npm run dev
 
 The application will be available at http://localhost:5173.
 
+---
+
+### 🆕 Recent Updates
+
+#### Latest Features (v2.0)
+
+**🏆 Achievements System**
+- Complete badge/achievement system with 12 unique badges
+- Four tier levels: Bronze, Silver, Gold, and Platinum
+- Real-time badge notifications when achievements are earned
+- Badge showcase on user dashboard
+- Automatic badge checking after every vote
+
+**🌐 Community Intelligence**
+- AI-powered analysis of Cardano forum discussions
+- Automated sentiment analysis for each CIP
+- Key points extraction from community feedback
+- Cached results for improved performance
+
+**📊 Vote Analytics**
+- Real-time vote distribution visualization
+- Percentage breakdowns for Yes/No/Abstain votes
+- Community voting trends display
+- Empty state messaging for new CIPs
+
+**🌍 Internationalization**
+- Multi-language translation support for CIP summaries
+- Powered by Gaia Node AI translation
+- Cached translations for efficiency
+- Growing language support
+
+**🎨 UX Improvements**
+- Sticky voting card that follows scroll
+- Collapsible content sections for better organization
+- Feature highlight cards on main page
+- Improved mobile responsiveness
+- Clean, modern interface design
+
+---
+
 ### 📷 Screenshots
 
 <img width="1799" height="1152" alt="screencapture-localhost-5173-dashboard-2025-09-26-09_10_36" src="https://github.com/user-attachments/assets/3259f4d6-65c9-4e5b-963f-a5bef5444281" />
@@ -160,6 +375,8 @@ The application will be available at http://localhost:5173.
 <img width="1799" height="1449" alt="screencapture-localhost-5173-2025-09-26-09_32_04" src="https://github.com/user-attachments/assets/b2853d9c-64cc-4128-a0fe-7a8666204686" />
 <img width="1799" height="1358" alt="screencapture-preprod-cardanoscan-io-transaction-0e7585a9508877a3d82f9bb3430bd6cfa96388223af0cafccba60a85eeae2dc5-2025-09-26-09_38_03" src="https://github.com/user-attachments/assets/38353a13-a80f-4da1-aef1-134fbb70a3fa" />
 
+---
+
 ### 🤝 Contributing
 
 Contributions are welcome! If you have suggestions or want to improve the code, please feel free to fork the repository, create a new branch, and submit a pull request.
@@ -169,9 +386,15 @@ Contributions are welcome! If you have suggestions or want to improve the code, 
 3.  Commit your Changes (git commit -m 'Add some AmazingFeature')
 4.  Push to the Branch (git push origin feature/AmazingFeature)
 5.  Open a Pull Request
-    
 
-### Acknowledgments
+---
 
--   Built by **[Harish Kotra](https://github.com/harishkotra)** for the Cardano Community.
--   Supported by **[Intersect MBO](https://intersectmbo.org/?proposalpal-ai)**.
+### 🙏 Acknowledgments
+
+-   Built by **[Harish Kotra](https://github.com/harishkotra)** for the Cardano Community
+-   Powered by **Gaia Node** AI technology
+-   Integrated with **MeshJS** wallet connectivity
+-   Blockchain data via **Blockfrost API**
+-   Community insights from **Cardano Forum**
+
+**Made with ❤️ for the Cardano ecosystem**
